@@ -5,6 +5,7 @@ using PipeQRTrack.Components;
 using PipeQRTrack.Components.Account;
 using PipeQRTrack.Data;
 using MudBlazor.Services;
+using PipeQRTrack.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,7 +43,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 // my setup
 
 builder.Services.AddMudServices();
-
+builder.Services.AddScoped<BasicService>();
 
 
 

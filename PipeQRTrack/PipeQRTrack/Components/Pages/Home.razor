@@ -1,5 +1,10 @@
 ﻿@page "/"
 
+@inject ISnackbar Snackbar
+@inject BasicService BasicService
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
 <PageTitle>Home</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small">
@@ -8,24 +13,46 @@
             <MudText Typo="Typo.h5">Work Order Entry</MudText>
         </MudCardHeader>
         <MudCardContent>
-            <MudTextField @bind-Value="lotNumber" Label="Lot Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField @bind-Value="jointNumber" Label="Joint Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="orderDetail.WorkOrder" Label="Work Order" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="orderDetail.LotNumber" Label="Lot Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="orderDetail.JointNumber" Label="Joint Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
         </MudCardContent>
         <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWorkOrder">Submit</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleSubmit">Submit</MudButton>
         </MudCardActions>
     </MudCard>
 </MudContainer>
 
 @code {
-    private string lotNumber = "";
-    private string jointNumber = "";
+    List<WorkOrderDetail>? workOrderDetails = null;
+    WorkOrderDetail orderDetail = new WorkOrderDetail
+        {
+            DateSubmitted = DateTime.Now
+    };
 
-    private async Task SubmitWorkOrder()
+
+    private async Task HandleSubmit()
     {
-        // Here you can add logic to handle the submitted data
-        await Task.Delay(1); // Placeholder for async operations
-        Console.WriteLine($"Lot Number: {lotNumber}, Joint Number: {jointNumber}");
-        // You might want to call a service to save the data or perform other actions
+        try
+        {
+            bool result = await BasicService.SubmitEntity(orderDetail);
+
+            if (result)
+            {
+                Snackbar.Add("Form submitted successfully!", Severity.Success);
+
+          
+            }
+            else
+            {
+                Snackbar.Add("Form submission failed. Please try again.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
+        }
     }
+
+
 }
