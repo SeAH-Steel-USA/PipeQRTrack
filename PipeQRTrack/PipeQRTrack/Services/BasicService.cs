@@ -13,7 +13,11 @@ namespace PipeQRTrack.Services
         {
             _context = context;
         }
-
+        public async Task<List<WorkOrderDetail>> GetAll()
+        {
+            var datas = await _context.WorkOrderDetails.ToListAsync();
+            return datas;
+        }
         public async Task<bool> SubmitEntity<T>(T entity) where T : class
         {
             try

@@ -6,7 +6,7 @@
 @attribute [StreamRendering]
 
 <PageTitle>Home</PageTitle>
-
+<MudStack Spacing="8">
 <MudContainer MaxWidth="MaxWidth.Small">
     <MudCard Elevation="3" Class="mt-6">
         <MudCardHeader>
@@ -23,13 +23,41 @@
     </MudCard>
 </MudContainer>
 
+<MudDataGrid T="WorkOrderDetail" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@workOrderDetails" Filterable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Records</MudText>
+        <MudSpacer />
+
+    </ToolBarContent>
+    <Columns>
+        <SelectColumn T="WorkOrderDetail" />
+
+
+        <PropertyColumn Property="x => x.WorkOrder" />
+        <PropertyColumn Property="x => x.LotNumber" />
+        <PropertyColumn Property="x => x.JointNumber" />
+        <PropertyColumn Property="x => x.DateSubmitted" />
+     
+
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="WorkOrderDetail" />
+    </PagerContent>
+</MudDataGrid>
+</MudStack>
 @code {
     List<WorkOrderDetail>? workOrderDetails = null;
     WorkOrderDetail orderDetail = new WorkOrderDetail
         {
             DateSubmitted = DateTime.Now
     };
+    protected override async Task OnInitializedAsync()
+    {
 
+
+        workOrderDetails = await BasicService.GetAll();
+
+    }
 
     private async Task HandleSubmit()
     {
@@ -40,8 +68,15 @@
             if (result)
             {
                 Snackbar.Add("Form submitted successfully!", Severity.Success);
+                workOrderDetails = await BasicService.GetAll();
 
-          
+                // Clear the form by resetting orderDetail
+                orderDetail = new WorkOrderDetail
+                    {
+                        DateSubmitted = DateTime.Now
+                    };
+
+               
             }
             else
             {
