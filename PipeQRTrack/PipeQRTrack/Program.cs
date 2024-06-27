@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using PipeQRTrack.Components;
 using PipeQRTrack.Components.Account;
 using PipeQRTrack.Data;
+using MudBlazor.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,14 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+
+// my setup
+
+builder.Services.AddMudServices();
+
+
+
 
 var app = builder.Build();
 

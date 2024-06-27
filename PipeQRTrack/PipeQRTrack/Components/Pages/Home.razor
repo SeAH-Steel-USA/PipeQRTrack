@@ -2,6 +2,30 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer MaxWidth="MaxWidth.Small">
+    <MudCard Elevation="3" Class="mt-6">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Work Order Entry</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="lotNumber" Label="Lot Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudTextField @bind-Value="jointNumber" Label="Joint Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWorkOrder">Submit</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>
 
-Welcome to your new app.
+@code {
+    private string lotNumber = "";
+    private string jointNumber = "";
+
+    private async Task SubmitWorkOrder()
+    {
+        // Here you can add logic to handle the submitted data
+        await Task.Delay(1); // Placeholder for async operations
+        Console.WriteLine($"Lot Number: {lotNumber}, Joint Number: {jointNumber}");
+        // You might want to call a service to save the data or perform other actions
+    }
+}
