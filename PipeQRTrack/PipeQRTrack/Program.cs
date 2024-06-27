@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using PipeQRTrack.Client.Pages;
 using PipeQRTrack.Components;
 using PipeQRTrack.Components.Account;
 using PipeQRTrack.Data;
