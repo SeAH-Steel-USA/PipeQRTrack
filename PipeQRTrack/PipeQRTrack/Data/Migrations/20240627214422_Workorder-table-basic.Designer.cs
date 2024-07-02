@@ -11,7 +11,7 @@ using PipeQRTrack.Data;
 
 namespace PipeQRTrack.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
+    [DbContext(typeof(AzureDbContext))]
     [Migration("20240627214422_Workorder-table-basic")]
     partial class Workordertablebasic
     {

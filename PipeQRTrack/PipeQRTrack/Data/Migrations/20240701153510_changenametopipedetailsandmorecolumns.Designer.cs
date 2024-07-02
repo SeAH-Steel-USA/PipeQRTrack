@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PipeQRTrack.Data;
 
@@ -11,9 +12,11 @@ using PipeQRTrack.Data;
 namespace PipeQRTrack.Migrations
 {
     [DbContext(typeof(AzureDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240701153510_changenametopipedetailsandmorecolumns")]
+    partial class changenametopipedetailsandmorecolumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,15 +254,15 @@ namespace PipeQRTrack.Migrations
                     b.Property<short?>("Millitm")
                         .HasColumnType("smallint");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(1)");
-
                     b.Property<double?>("Val")
                         .HasColumnType("float");
 
                     b.Property<string>("WorkOrder")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("status")
+                        .HasColumnType("bit");
 
                     b.HasKey("Guid");
 

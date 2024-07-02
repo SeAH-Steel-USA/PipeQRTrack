@@ -11,7 +11,7 @@ using PipeQRTrack.Data;
 
 namespace PipeQRTrack.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
+    [DbContext(typeof(AzureDbContext))]
     [Migration("20240627210322_initsetup")]
     partial class initsetup
     {

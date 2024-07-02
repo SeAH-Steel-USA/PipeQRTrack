@@ -7,15 +7,15 @@ namespace PipeQRTrack.Services
     public class BasicService
     {
 
-        private readonly ApplicationDbContext _context;
+        private readonly AzureDbContext _context;
 
-        public BasicService(ApplicationDbContext context)
+        public BasicService(AzureDbContext context)
         {
             _context = context;
         }
-        public async Task<List<WorkOrderDetail>> GetAll()
+        public async Task<List<PipeDetail>> GetAll()
         {
-            var datas = await _context.WorkOrderDetails.ToListAsync();
+            var datas = await _context.PipeDetails.ToListAsync();
             return datas;
         }
         public async Task<bool> SubmitEntity<T>(T entity) where T : class

@@ -27,15 +27,24 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+// Configure the AzureDbContext
+var azureConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<AzureDbContext>(options =>
+    options.UseSqlServer(azureConnectionString));
 
+// Configure the LocalDbContext
+var localConnectionString = builder.Configuration.GetConnectionString("LocalConnection")
+    ?? throw new InvalidOperationException("Connection string 'LocalConnection' not found.");
+builder.Services.AddDbContext<LocalDbContext>(options =>
+    options.UseSqlServer(localConnectionString));
+
+// Configure Identity
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddEntityFrameworkStores<AzureDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
@@ -44,6 +53,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 builder.Services.AddMudServices();
 builder.Services.AddScoped<BasicService>();
+builder.Services.AddScoped<DataService>();
 
 
 

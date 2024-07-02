@@ -3,14 +3,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PipeQRTrack.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class AzureDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : base(options)
+        public AzureDbContext(DbContextOptions<AzureDbContext> options)
+            : base(options)
         {
         }
 
-        public DbSet<WorkOrderDetail> WorkOrderDetails { get; set; }
+        public DbSet<PipeDetail> PipeDetails { get; set; }
+
 
     }
+
+    public class LocalDbContext : DbContext
+    {
+        public LocalDbContext(DbContextOptions<LocalDbContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<FloatTableP1TLC2> FloatTableP1TLC2 { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<FloatTableP1TLC2>()
+                .ToTable("FloatTableP1TLC2")
+                .HasNoKey();
+        }
+
+
+    }
+
 }
