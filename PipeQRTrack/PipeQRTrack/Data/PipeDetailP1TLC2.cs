@@ -2,16 +2,16 @@
 
 namespace PipeQRTrack.Data
 {
-    public class PipeDetail
+    public class PipeDetailP1TLC2
     {
         [Key]
         public Guid Guid { get; set; }
 
-        public string WorkOrder { get; set; }
-        public string LotNumber { get; set;}
-        public string JointNumber { get; set; }
-        public string JobNumber { get; set; }
-        public string HeatNumber { get; set; }
+        public string? WorkOrder { get; set; }
+        public string? LotNumber { get; set;}
+        public string? JointNumber { get; set; }
+        public string? JobNumber { get; set; }
+        public string? HeatNumber { get; set; }
         public char? Status { get; set; }
         public DateTime DateTime { get; set; }
 

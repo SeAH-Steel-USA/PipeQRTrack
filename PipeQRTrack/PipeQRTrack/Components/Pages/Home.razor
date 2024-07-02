@@ -6,123 +6,61 @@
 @attribute [StreamRendering]
 @inject DataService DataService
 
-<button @onclick="ProcessValues">Process Values</button>
 <PageTitle>Home</PageTitle>
-<MudStack Spacing="8">
-<MudContainer MaxWidth="MaxWidth.Small">
-    <MudCard Elevation="3" Class="mt-6">
-        <MudCardHeader>
-            <MudText Typo="Typo.h5">Work Order Entry</MudText>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudTextField @bind-Value="orderDetail.WorkOrder" Label="Work Order" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField @bind-Value="orderDetail.LotNumber" Label="Lot Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
-            <MudTextField @bind-Value="orderDetail.JointNumber" Label="Joint Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudTextField @bind-Value="orderDetail.JobNumber" Label="Joint Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudTextField @bind-Value="orderDetail.HeatNumber" Label="Joint Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
-        
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleSubmit">Submit</MudButton>
-        </MudCardActions>
-    </MudCard>
-</MudContainer>
-
-<MudDataGrid T="PipeDetail" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@workOrderDetails" Filterable="true">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Records</MudText>
-        <MudSpacer />
-
-    </ToolBarContent>
-    <Columns>
-        <SelectColumn T="PipeDetail" />
 
 
-        <PropertyColumn Property="x => x.WorkOrder" />
-        <PropertyColumn Property="x => x.LotNumber" />
-        <PropertyColumn Property="x => x.JointNumber" />
-        <PropertyColumn Property="x => x.DateTime" />
-            <PropertyColumn Property="x => x.JobNumber" />
-            <PropertyColumn Property="x => x.HeatNumber" />
-            <PropertyColumn Property="x => x.Status" />
+@if (workOrderDetails == null)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+
+}
+else
+{
 
 
 
-    </Columns>
-    <PagerContent>
-        <MudDataGridPager T="PipeDetail" />
-    </PagerContent>
-</MudDataGrid>
-</MudStack>
+
+        <MudDataGrid T="PipeDetailComplete" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@workOrderDetails" Filterable="true">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Records</MudText>
+                <MudSpacer />
+
+            </ToolBarContent>
+            <Columns>
+                <SelectColumn T="PipeDetailComplete" />
+
+
+                <PropertyColumn Property="x => x.WorkOrder" />
+                <PropertyColumn Property="x => x.LotNumber" />
+                <PropertyColumn Property="x => x.JointNumber" />
+                <PropertyColumn Property="x => x.DateTime" />
+                <PropertyColumn Property="x => x.JobNumber" />
+                <PropertyColumn Property="x => x.HeatNumber" />
+                <PropertyColumn Property="x => x.Status" />
+                <PropertyColumn Property="x => x.Val" />
+
+
+
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="PipeDetailComplete" />
+            </PagerContent>
+        </MudDataGrid>
+
+}
+
 @code {
-    List<PipeDetail>? workOrderDetails = null;
-    PipeDetail orderDetail = new PipeDetail
-        {
-            DateTime = DateTime.Now
-    };
+    List<PipeDetailComplete>? workOrderDetails = null;
+
     protected override async Task OnInitializedAsync()
     {
 
 
-        workOrderDetails = await BasicService.GetAll();
+        workOrderDetails = await BasicService.GetAll<PipeDetailComplete>();
 
     }
 
 
-    private async Task ProcessValues()
-    {
-        try
-        {
-            string result = await DataService.UpdatePipeDetailsWithValAsync();
-
-            if (result.StartsWith("Successfully"))
-            {
-                Snackbar.Add(result, Severity.Success);
-            }
-            else if (result == "No updates needed." || result == "No updates were needed or possible.")
-            {
-                Snackbar.Add(result, Severity.Info);
-            }
-            else
-            {
-                Snackbar.Add(result, Severity.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task HandleSubmit()
-    {
-        try
-        {
-            bool result = await BasicService.SubmitEntity(orderDetail);
-
-            if (result)
-            {
-                Snackbar.Add("Form submitted successfully!", Severity.Success);
-                workOrderDetails = await BasicService.GetAll();
-
-                // Clear the form by resetting orderDetail
-                orderDetail = new PipeDetail
-                    {
-                        DateTime = DateTime.Now
-                    };
-
-               
-            }
-            else
-            {
-                Snackbar.Add("Form submission failed. Please try again.", Severity.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
-        }
-    }
-
+ 
 
 }

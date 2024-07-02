@@ -13,10 +13,9 @@ namespace PipeQRTrack.Services
         {
             _context = context;
         }
-        public async Task<List<PipeDetail>> GetAll()
+        public async Task<List<T>> GetAll<T>() where T : class
         {
-            var datas = await _context.PipeDetails.ToListAsync();
-            return datas;
+            return await _context.Set<T>().ToListAsync();
         }
         public async Task<bool> SubmitEntity<T>(T entity) where T : class
         {
