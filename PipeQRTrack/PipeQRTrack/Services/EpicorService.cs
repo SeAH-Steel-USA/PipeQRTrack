@@ -49,5 +49,34 @@ namespace PipeQRTrack.Services
             }
         }
 
+
+        public async Task<(EpicorJobInfo JobInfo, string Message)> GetJobInfoByLotNumberAsync(string lotNumber)
+        {
+            try
+            {
+                var (jobInfos, message) = await GetJobInfosAsync();
+
+                if (!message.StartsWith("Successfully"))
+                {
+                    return (null, message);
+                }
+
+                var matchingJobInfo = jobInfos.FirstOrDefault(j => j.LotNumber == lotNumber);
+
+                if (matchingJobInfo != null)
+                {
+                    return (matchingJobInfo, $"Successfully found job info for lot number {lotNumber}.");
+                }
+                else
+                {
+                    return (null, $"No job info found for lot number {lotNumber}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return (null, $"An error occurred while searching for lot number {lotNumber}: {ex.Message}");
+            }
+        }
+
     }
 }

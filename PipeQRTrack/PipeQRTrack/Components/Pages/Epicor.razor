@@ -3,10 +3,65 @@
 @rendermode InteractiveServer
 @attribute [StreamRendering]
 @inject EpicorService EpicorService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-6">
+    <MudPaper Elevation="3" Class="pa-4">
+        <MudText Typo="Typo.h5" Class="mb-4">Epicor Job Information</MudText>
+
+        <MudTextField @bind-Value="scannedLotNumber"
+                      Label="Scan Lot Number"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.QrCodeScanner"
+                      Class="mb-4" />
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="HandleScan"
+                   StartIcon="@Icons.Material.Filled.Search"
+                   FullWidth="true">
+            Scan
+        </MudButton>
+    </MudPaper>
+
+    @if (jobInfo != null)
+    {
+        <MudPaper Elevation="3" Class="pa-4 mt-6">
+            <MudText Typo="Typo.h6" Class="mb-4">Job Information</MudText>
+
+            <MudGrid>
+                <MudItem xs="12" sm="4">
+                    <MudText><strong>Lot Number:</strong></MudText>
+                    <MudText Class="ml-4">@jobInfo.LotNumber</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText><strong>Heat Number:</strong></MudText>
+                    <MudText Class="ml-4">@jobInfo.HeatNumber</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudText><strong>Job Number:</strong></MudText>
+                    <MudText Class="ml-4">@jobInfo.JobNumber</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+</MudContainer>
 
 
 
-<MudDataGrid T="EpicorJobInfo" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@jobinfos" Filterable="true">
+
+
+
+
+
+
+
+
+
+
+
+@* <MudDataGrid T="EpicorJobInfo" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@jobinfos" Filterable="true">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Records</MudText>
         <MudSpacer />
@@ -28,24 +83,76 @@
     <PagerContent>
         <MudDataGridPager T="EpicorJobInfo" />
     </PagerContent>
-</MudDataGrid>
+</MudDataGrid> *@
 
 @code {
+    private string scannedLotNumber;
+    private EpicorJobInfo jobInfo;
 
-
-    List<EpicorJobInfo>? jobinfos = null;
-
-
-
-    private string statusMessage;
-
-    protected override async Task OnInitializedAsync()
+    private async Task HandleScan()
     {
-        var result = await EpicorService.GetJobInfosAsync();
-        jobinfos = result.JobInfos;
-        statusMessage = result.Message;
+        if (string.IsNullOrWhiteSpace(scannedLotNumber))
+        {
+            Snackbar.Add("Please enter a lot number.", Severity.Warning);
+            return;
+        }
 
-        // Additional initialization if needed
+        try
+        {
+            var (retrievedJobInfo, message) = await EpicorService.GetJobInfoByLotNumberAsync(scannedLotNumber);
+
+            if (message.StartsWith("Successfully"))
+            {
+                Snackbar.Add(message, Severity.Success);
+                jobInfo = retrievedJobInfo;
+            }
+            else if (message.StartsWith("No job info found"))
+            {
+                Snackbar.Add(message, Severity.Warning);
+                jobInfo = null;
+            }
+            else
+            {
+                Snackbar.Add(message, Severity.Error);
+                jobInfo = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
+            jobInfo = null;
+        }
     }
+
+    // List<EpicorJobInfo>? jobinfos = null;
+
+
+
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     try
+    //     {
+    //         var (retrievedJobInfos, message) = await EpicorService.GetJobInfosAsync();
+
+    //         if (message.StartsWith("Successfully"))
+    //         {
+    //             Snackbar.Add(message, Severity.Success);
+    //             jobinfos = retrievedJobInfos;
+    //         }
+    //         else if (message == "No updates needed.")
+    //         {
+    //             Snackbar.Add(message, Severity.Info);
+    //         }
+    //         else
+    //         {
+    //             Snackbar.Add(message, Severity.Error);
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
+    //     }
+    // }
 
 }
