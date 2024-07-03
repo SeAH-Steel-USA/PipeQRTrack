@@ -1,0 +1,51 @@
+﻿<h3>Epicor</h3>
+@page "/"
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+@inject EpicorService EpicorService
+
+
+
+<MudDataGrid T="EpicorJobInfo" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@jobinfos" Filterable="true">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Records</MudText>
+        <MudSpacer />
+
+    </ToolBarContent>
+    <Columns>
+        <SelectColumn T="EpicorJobInfo" />
+
+
+        <PropertyColumn Property="x => x.JobNumber" />
+        <PropertyColumn Property="x => x.HeatNumber" />
+        <PropertyColumn Property="x => x.LotNumber" />
+
+
+
+
+
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="EpicorJobInfo" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+
+
+    List<EpicorJobInfo>? jobinfos = null;
+
+
+
+    private string statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await EpicorService.GetJobInfosAsync();
+        jobinfos = result.JobInfos;
+        statusMessage = result.Message;
+
+        // Additional initialization if needed
+    }
+
+}

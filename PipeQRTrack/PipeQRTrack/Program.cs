@@ -54,7 +54,8 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddMudServices();
 builder.Services.AddScoped<BasicService>();
 builder.Services.AddScoped<DataService>();
-
+builder.Services.AddScoped<EpicorService>();
+builder.Services.AddHttpClient();
 
 
 var app = builder.Build();
