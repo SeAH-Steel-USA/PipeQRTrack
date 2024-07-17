@@ -13,6 +13,8 @@
 
 @inject EpicorService EpicorService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4 mt-6">
     <MudPaper Elevation="3" Class="pa-4">
@@ -23,7 +25,8 @@
                       Variant="Variant.Outlined"
                       Adornment="Adornment.End"
                       AdornmentIcon="@Icons.Material.Filled.QrCodeScanner"
-                      Class="mb-4" />
+                      Class="mb-4"
+                      ReadOnly="true" />
 
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
@@ -258,6 +261,35 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"An error occurred while submitting the record: {ex.Message}", Severity.Error);
+        }
+    }
+
+
+    // Scanner
+    private DotNetObjectReference<TLC1Processing>? objRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("setupScanner", objRef);
+        }
+    }
+
+    [JSInvokable]
+    public void OnScanComplete(string scannedValue)
+    {
+        scannedLotNumber = scannedValue;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (objRef != null)
+        {
+            await JSRuntime.InvokeVoidAsync("disposeScanner");
+            objRef.Dispose();
         }
     }
 
