@@ -24,10 +24,9 @@ else
         <MudContainer MaxWidth="MaxWidth.Small">
             <MudCard Elevation="3" Class="mt-6">
                 <MudCardHeader>
-                    <MudText Typo="Typo.h5">Work Order Entry</MudText>
+                    <MudText Typo="Typo.h5">Manual Entry</MudText>
                 </MudCardHeader>
                 <MudCardContent>
-                    <MudTextField @bind-Value="orderDetail.WorkOrder" Label="Work Order" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     <MudTextField @bind-Value="orderDetail.LotNumber" Label="Lot Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     <MudTextField @bind-Value="orderDetail.JointNumber" Label="Joint Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
                     <MudTextField @bind-Value="orderDetail.JobNumber" Label="Job Number" Variant="Variant.Outlined" Margin="Margin.Dense" />
@@ -50,7 +49,7 @@ else
                 <SelectColumn T="PipeDetailP1TLC2" />
 
 
-                <PropertyColumn Property="x => x.WorkOrder" />
+   
                 <PropertyColumn Property="x => x.LotNumber" />
                 <PropertyColumn Property="x => x.JointNumber" />
                 <PropertyColumn Property="x => x.DateTime" />

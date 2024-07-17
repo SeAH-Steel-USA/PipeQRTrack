@@ -54,7 +54,7 @@ namespace PipeQRTrack.Services
                         {
                             // Map properties from pipeDetail to completeDetail
                             // Adjust these according to your PipeDetailComplete model
-                            WorkOrder = pipeDetail.WorkOrder,
+                       
                             LotNumber = pipeDetail.LotNumber,
                             JointNumber = pipeDetail.JointNumber,
                             JobNumber = pipeDetail.JobNumber,
@@ -141,7 +141,7 @@ namespace PipeQRTrack.Services
                         {
                             // Map properties from pipeDetail to completeDetail
                             // Adjust these according to your PipeDetailComplete model
-                            WorkOrder = pipeDetail.WorkOrder,
+                
                             LotNumber = pipeDetail.LotNumber,
                             JointNumber = pipeDetail.JointNumber,
                             JobNumber = pipeDetail.JobNumber,
