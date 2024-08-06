@@ -218,7 +218,7 @@ else
     private string scannedLotNumber;
     private EpicorJobInfo jobInfo;
     private bool showManualEntry = false;
-
+    private string jointNumber;
     private async Task HandleScan()
     {
         if (string.IsNullOrWhiteSpace(scannedLotNumber))
@@ -226,10 +226,23 @@ else
             Snackbar.Add("Please enter a lot number.", Severity.Warning);
             return;
         }
+        string lotNumber;
+        int dashIndex = scannedLotNumber.IndexOf("24-");
+
+        if (dashIndex != -1)
+        {
+            jointNumber = scannedLotNumber.Substring(0, dashIndex).Trim('-');
+            lotNumber = scannedLotNumber.Substring(dashIndex);
+        }
+        else
+        {
+            Snackbar.Add("Invalid format. Lot number should contain '24-'.", Severity.Warning);
+            return;
+        }
 
         try
         {
-            var (retrievedJobInfo, message) = await EpicorService.GetJobInfoByLotNumberAsync(scannedLotNumber);
+            var (retrievedJobInfo, message) = await EpicorService.GetJobInfoByLotNumberAsync(lotNumber);
 
             if (message.StartsWith("Successfully"))
             {
