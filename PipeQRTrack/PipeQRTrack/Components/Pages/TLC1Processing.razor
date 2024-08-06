@@ -89,9 +89,10 @@ else
 {
 
     <MudStack Spacing="8">
-        <MudDataGrid T="PipeDetailP1TLC1" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@workOrderDetails" Filterable="true">
+        <MudDataGrid T="PipeDetailP1TLC1" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@workOrderDetails" Filterable="true" SelectedItemsChanged="OnSelectedItemChanged">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Records</MudText>
+                 <MudIconButton Icon="@Icons.Material.Outlined.Remove" Color="Color.Inherit" OnClick="RemoveSelectedIncidents"></MudIconButton>
                 <MudSpacer />
 
             </ToolBarContent>
@@ -286,6 +287,49 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"An error occurred while submitting the record: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private List<PipeDetailP1TLC1> selectedDetails = new();
+    private void OnSelectedItemChanged(HashSet<PipeDetailP1TLC1> selectedItems)
+    {
+        selectedDetails = selectedItems.ToList();
+    }
+
+    private async Task RemoveSelectedIncidents()
+    {
+        try
+        {
+            bool result = await BasicService.RemoveEntities(selectedDetails);
+            if (result)
+            {
+                workOrderDetails = await BasicService.GetAll<PipeDetailP1TLC1>();
+                selectedDetails.Clear();
+                Snackbar.Add("Selected details removed successfully!", Severity.Success, config =>
+                {
+                    config.ShowCloseIcon = true;
+                    config.VisibleStateDuration = 3000; // 3 seconds
+                    config.SnackbarVariant = Variant.Filled;
+                });
+            }
+            else
+            {
+                Snackbar.Add("Failed to remove selected details. Please try again.", Severity.Error, config =>
+                {
+                    config.ShowCloseIcon = true;
+                    config.VisibleStateDuration = 5000; // 5 seconds
+                    config.SnackbarVariant = Variant.Outlined;
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error, config =>
+            {
+                config.ShowCloseIcon = true;
+                config.VisibleStateDuration = 8000; // 8 seconds
+                config.SnackbarVariant = Variant.Text;
+            });
         }
     }
 

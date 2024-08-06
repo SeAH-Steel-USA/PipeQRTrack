@@ -41,5 +41,30 @@ namespace PipeQRTrack.Services
                 return false;
             }
         }
+
+        public async Task<bool> RemoveEntities<T>(List<T> entities) where T : class
+        {
+            try
+            {
+                _context.RemoveRange(entities);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateException ex)
+            {
+                var sqlException = ex.GetBaseException() as SqlException;
+                if (sqlException != null)
+                {
+                    // Log or handle SQL exception
+                    Console.WriteLine(sqlException.Message);
+                }
+                else
+                {
+                    // Log or handle other exceptions
+                    Console.WriteLine(ex.Message);
+                }
+                return false;
+            }
+        }
     }
 }
