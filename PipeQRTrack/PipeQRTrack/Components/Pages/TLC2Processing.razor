@@ -13,7 +13,7 @@
 
 @inject EpicorService EpicorService
 @inject ISnackbar Snackbar
-
+@using System.ComponentModel.DataAnnotations
 <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4 mt-6">
     <MudPaper Elevation="3" Class="pa-4">
         <MudText Typo="Typo.h5" Class="mb-4">Epicor Job Information</MudText>
@@ -163,6 +163,10 @@ else
 
     private async Task HandleSubmit()
     {
+        if (!ValidateForm() && showManualEntry)
+        {
+            return;
+        }
         try
         {
             bool result = await BasicService.SubmitEntity(orderDetail);
@@ -189,8 +193,25 @@ else
         {
             Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
         }
+        showManualEntry = false;
     }
 
+    private bool ValidateForm()
+    {
+        var validationContext = new ValidationContext(orderDetail, serviceProvider: null, items: null);
+        var validationResults = new List<ValidationResult>();
+        bool isValid = Validator.TryValidateObject(orderDetail, validationContext, validationResults, true);
+
+        if (!isValid && showManualEntry)
+        {
+            foreach (var validationResult in validationResults)
+            {
+                Snackbar.Add(validationResult.ErrorMessage, Severity.Warning);
+            }
+        }
+
+        return isValid;
+    }
 
 
     private string scannedLotNumber;

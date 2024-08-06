@@ -9,7 +9,7 @@ namespace PipeQRTrack.Data
         [Key]
         public Guid Guid { get; set; }
 
-        public string? WorkOrder { get; set; }
+
         public string? LotNumber { get; set; }
         public string? JointNumber { get; set; }
         public string? JobNumber { get; set; }
