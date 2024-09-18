@@ -1,5 +1,8 @@
 ﻿@page "/TLC2"
-
+@using QRCoder
+@using System.Drawing
+@using System.Drawing.Imaging
+@using System.Collections.Generic
 @inject ISnackbar Snackbar
 @inject BasicService BasicService
 @rendermode InteractiveServer
@@ -18,7 +21,7 @@
     <MudPaper Elevation="3" Class="pa-4">
         <MudText Typo="Typo.h5" Class="mb-4">Epicor Job Information</MudText>
 
-        <MudTextField @bind-Value="scannedLotNumber"
+        <MudTextField @bind-Value="scannedString"
                       Label="Scan Lot Number"
                       Variant="Variant.Outlined"
                       Adornment="Adornment.End"
@@ -26,7 +29,7 @@
                       Class="mb-4" />
 
         <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
+                   Color="MudBlazor.Color.Primary"
                    OnClick="HandleScan"
                    StartIcon="@Icons.Material.Filled.Search"
                    FullWidth="true">
@@ -53,7 +56,29 @@
                     <MudText Class="ml-4">@jobInfo.JobNumber</MudText>
                 </MudItem>
             </MudGrid>
+
         </MudPaper>
+
+        <MudPaper Elevation="3" Class="pa-4 mt-6 d-flex flex-column align-center">
+            <MudText Typo="Typo.h6" Class="mb-4">QR Code</MudText>
+
+            <MudGrid Justify="Justify.Center">
+                <MudItem xs="12" sm="4" Class="d-flex justify-center">
+                    @if (GeneratedQRCodes.Any())
+                    {
+                        <MudImage Src="@GeneratedQRCodes.First().QRCode" Class="mx-auto" />
+                    }
+                    else
+                    {
+                        <MudProgressCircular Class="mx-auto">Generating QR</MudProgressCircular>
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+
+
+
     }
     else if (showManualEntry)
     {
@@ -71,7 +96,7 @@
 
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="HandleSubmit">Submit</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" OnClick="HandleSubmit">Submit</MudButton>
                 </MudCardActions>
             </MudCard>
         </MudContainer>
@@ -81,7 +106,7 @@
 
 @if (workOrderDetails == null)
 {
-    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    <MudProgressCircular Color="MudBlazor.Color.Primary" Indeterminate="true" />
 
 }
 else
@@ -95,7 +120,7 @@ else
         <MudDataGrid T="PipeDetailP1TLC2" MultiSelection="true" Hover="true" SortMode="SortMode.Single" Items="@workOrderDetails" Filterable="true" SelectedItemsChanged="OnSelectedItemChanged">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Records</MudText>
-                <MudIconButton Icon="@Icons.Material.Outlined.Remove" Color="Color.Inherit" OnClick="RemoveSelectedIncidents"></MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Outlined.Remove" Color="MudBlazor.Color.Inherit" OnClick="RemoveSelectedIncidents"></MudIconButton>
                 <MudSpacer />
 
             </ToolBarContent>
@@ -134,6 +159,57 @@ else
 
         workOrderDetails = await BasicService.GetAll<PipeDetailP1TLC2>();
 
+    }
+    private string RenderCardAsImage(string matrix)
+    {
+        int size = 300; // Square size for the entire image
+        int qrCodeSize = 260; // Size of the QR code
+
+        using (MemoryStream ms = new MemoryStream())
+        {
+            using (Bitmap bmp = new Bitmap(size, size))
+            {
+                using (Graphics g = Graphics.FromImage(bmp))
+                {
+                    g.Clear(System.Drawing.Color.White);
+
+                    // Center the QR code
+                    int qrCodeX = (size - qrCodeSize) / 2;
+                    int qrCodeY = (size - qrCodeSize) / 2 - 20; // Shift up slightly to make room for text
+                    Rectangle qrCodeArea = new Rectangle(qrCodeX, qrCodeY, qrCodeSize, qrCodeSize);
+
+                    // Render QR code
+                    QRCodeGenerator qrGenerator = new QRCodeGenerator();
+                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(matrix, QRCodeGenerator.ECCLevel.M);
+                    QRCode qrCode = new QRCode(qrCodeData);
+                    using (Bitmap qrCodeImage = qrCode.GetGraphic(10, System.Drawing.Color.Black, System.Drawing.Color.White, true))
+                    {
+                        g.DrawImage(qrCodeImage, qrCodeArea);
+                    }
+
+                    // Render text below QR code
+                    using (Font titleFont = new Font("Arial", 12, FontStyle.Bold))
+                    using (Font matrixFont = new Font("Arial", 10, FontStyle.Regular))
+                    {
+                        string titleText = "SeAH Steel USA";
+                        SizeF titleSize = g.MeasureString(titleText, titleFont);
+                        float titleX = (size - titleSize.Width) / 2;
+                        float titleY = qrCodeArea.Bottom ;
+
+                        g.DrawString(titleText, titleFont, Brushes.Black, titleX, titleY);
+
+                        SizeF matrixSize = g.MeasureString(matrix, matrixFont);
+                        float matrixX = (size - matrixSize.Width) / 2;
+                        float matrixY = titleY + titleSize.Height + 5;
+
+                        g.DrawString(matrix, matrixFont, Brushes.Black, matrixX, matrixY);
+                    }
+                }
+
+                bmp.Save(ms, ImageFormat.Png);
+                return "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+            }
+        }
     }
 
 
@@ -214,25 +290,32 @@ else
         return isValid;
     }
 
+    List<QRCodeInfo> GeneratedQRCodes { get; set; } = new List<QRCodeInfo>();
+    public class QRCodeInfo
+    {
+        public string QRCode { get; set; }
+        public string Number { get; set; }
+    }
 
-    private string scannedLotNumber;
+
+    private string scannedString;
     private EpicorJobInfo jobInfo;
     private bool showManualEntry = false;
     private string jointNumber;
     private async Task HandleScan()
     {
-        if (string.IsNullOrWhiteSpace(scannedLotNumber))
+        if (string.IsNullOrWhiteSpace(scannedString))
         {
             Snackbar.Add("Please enter a lot number.", Severity.Warning);
             return;
         }
         string lotNumber;
-        int dashIndex = scannedLotNumber.IndexOf("24-");
+        int dashIndex = scannedString.IndexOf("24-");
 
         if (dashIndex != -1)
         {
-            jointNumber = scannedLotNumber.Substring(0, dashIndex).Trim('-');
-            lotNumber = scannedLotNumber.Substring(dashIndex);
+            jointNumber = scannedString.Substring(0, dashIndex).Trim('-');
+            lotNumber = scannedString.Substring(dashIndex);
         }
         else
         {
@@ -249,6 +332,21 @@ else
                 Snackbar.Add(message, Severity.Success);
                 jobInfo = retrievedJobInfo;
                 showManualEntry = false;
+
+
+                try
+                {
+                    GeneratedQRCodes.Clear();
+                    string cardImage = RenderCardAsImage(scannedString);
+                    GeneratedQRCodes.Add(new QRCodeInfo { QRCode = cardImage, Number = scannedString });
+                }
+                catch(Exception ex)
+                {
+
+                    Snackbar.Add($"{ex}", Severity.Error);
+                }
+
+
                 await SubmitScannedRecord(jobInfo); // Add this line
             }
             else if (message.StartsWith("No job info found"))
@@ -318,31 +416,16 @@ else
             {
                 workOrderDetails = await BasicService.GetAll<PipeDetailP1TLC2>();
                 selectedDetails.Clear();
-                Snackbar.Add("Selected details removed successfully!", Severity.Success, config =>
-                {
-                    config.ShowCloseIcon = true;
-                    config.VisibleStateDuration = 3000; // 3 seconds
-                    config.SnackbarVariant = Variant.Filled;
-                });
+                Snackbar.Add("Selected details removed successfully!", Severity.Success);
             }
             else
             {
-                Snackbar.Add("Failed to remove selected details. Please try again.", Severity.Error, config =>
-                {
-                    config.ShowCloseIcon = true;
-                    config.VisibleStateDuration = 5000; // 5 seconds
-                    config.SnackbarVariant = Variant.Outlined;
-                });
+                Snackbar.Add("Failed to remove selected details. Please try again.", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error, config =>
-            {
-                config.ShowCloseIcon = true;
-                config.VisibleStateDuration = 8000; // 8 seconds
-                config.SnackbarVariant = Variant.Text;
-            });
+            Snackbar.Add($"An error occurred: {ex.Message}", Severity.Error);
         }
     }
 
