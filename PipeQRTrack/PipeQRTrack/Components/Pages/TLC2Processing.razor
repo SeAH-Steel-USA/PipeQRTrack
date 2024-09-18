@@ -5,6 +5,7 @@
 @using System.IO;
 @using ZXing;
 @using ZXing.QrCode;
+@using ZXing.Windows.Compatibility;
 @inject ISnackbar Snackbar
 @inject BasicService BasicService
 @rendermode InteractiveServer
@@ -281,6 +282,7 @@ else
         public string QRCode { get; set; }
         public string Number { get; set; }
     }
+
     private string RenderCardAsImage(string matrix)
     {
         int size = 300; // Square size for the entire image
@@ -300,7 +302,7 @@ else
                     Rectangle qrCodeArea = new Rectangle(qrCodeX, qrCodeY, qrCodeSize, qrCodeSize);
 
                     // Render QR code
-                    BarcodeWriter<Bitmap> barcodeWriter = new BarcodeWriter<Bitmap>
+                    var barcodeWriter = new ZXing.Windows.Compatibility.BarcodeWriter
                         {
                             Format = BarcodeFormat.QR_CODE,
                             Options = new QrCodeEncodingOptions
@@ -308,9 +310,10 @@ else
                                 Width = qrCodeSize,
                                 Height = qrCodeSize,
                                 Margin = 0
-                            }
+                            },
+                            Renderer = new BitmapRenderer() // Set the renderer here
                         };
-                    Bitmap qrCodeImage = barcodeWriter.Write(matrix);
+                    var qrCodeImage = barcodeWriter.Write(matrix);
                     g.DrawImage(qrCodeImage, qrCodeArea);
 
                     // Render text below QR code
