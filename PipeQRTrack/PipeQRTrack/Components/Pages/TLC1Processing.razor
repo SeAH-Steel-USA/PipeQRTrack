@@ -1,9 +1,12 @@
 ﻿@page "/TLC1"
 @using System.ComponentModel.DataAnnotations
-@using QRCoder
-@using System.Drawing
-@using System.Drawing.Imaging
-@using System.Collections.Generic
+
+@using System;
+@using System.Drawing;
+@using System.Drawing.Imaging;
+@using System.IO;
+@using ZXing;
+@using ZXing.QrCode;
 @inject ISnackbar Snackbar
 @inject BasicService BasicService
 @rendermode InteractiveServer
@@ -66,7 +69,7 @@
             <MudText Typo="Typo.h6" Class="mb-4">QR Code</MudText>
 
             <MudGrid Justify="Justify.Center">
-                <MudItem xs="12" sm="4" Class="d-flex justify-center">
+                <MudItem xs="12" sm="4" Class="d-flex flex-column align-center">
                     @if (GeneratedQRCodes.Any())
                     {
                         <MudImage Src="@GeneratedQRCodes.First().QRCode" Class="mx-auto mb-4" />
@@ -200,14 +203,18 @@ else
                     int qrCodeY = (size - qrCodeSize) / 2 - 20; // Shift up slightly to make room for text
                     Rectangle qrCodeArea = new Rectangle(qrCodeX, qrCodeY, qrCodeSize, qrCodeSize);
 
-                    // Render QR code
-                    QRCodeGenerator qrGenerator = new QRCodeGenerator();
-                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(matrix, QRCodeGenerator.ECCLevel.M);
-                    QRCode qrCode = new QRCode(qrCodeData);
-                    using (Bitmap qrCodeImage = qrCode.GetGraphic(10, System.Drawing.Color.Black, System.Drawing.Color.White, true))
-                    {
-                        g.DrawImage(qrCodeImage, qrCodeArea);
-                    }
+                    BarcodeWriter<Bitmap> barcodeWriter = new BarcodeWriter<Bitmap>
+                        {
+                            Format = BarcodeFormat.QR_CODE,
+                            Options = new QrCodeEncodingOptions
+                            {
+                                Width = qrCodeSize,
+                                Height = qrCodeSize,
+                                Margin = 0
+                            }
+                        };
+                    Bitmap qrCodeImage = barcodeWriter.Write(matrix);
+                    g.DrawImage(qrCodeImage, qrCodeArea);
 
                     // Render text below QR code
                     using (Font titleFont = new Font("Arial", 12, FontStyle.Bold))
@@ -233,6 +240,7 @@ else
             }
         }
     }
+
 
     private async Task ProcessValues()
     {

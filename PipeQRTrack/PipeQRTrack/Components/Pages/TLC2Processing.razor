@@ -1,8 +1,10 @@
 ﻿@page "/TLC2"
-@using QRCoder
-@using System.Drawing
-@using System.Drawing.Imaging
-@using System.Collections.Generic
+@using System;
+@using System.Drawing;
+@using System.Drawing.Imaging;
+@using System.IO;
+@using ZXing;
+@using ZXing.QrCode;
 @inject ISnackbar Snackbar
 @inject BasicService BasicService
 @rendermode InteractiveServer
@@ -17,6 +19,10 @@
 @inject EpicorService EpicorService
 @inject ISnackbar Snackbar
 @using System.ComponentModel.DataAnnotations
+@using System.Drawing
+@using System.Drawing.Imaging
+@using ZXing
+@using ZXing.QrCode
 <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4 mt-6">
     <MudPaper Elevation="3" Class="pa-4">
         <MudText Typo="Typo.h5" Class="mb-4">Epicor Job Information</MudText>
@@ -187,57 +193,7 @@ else
         }
     }
 
-    private string RenderCardAsImage(string matrix)
-    {
-        int size = 300; // Square size for the entire image
-        int qrCodeSize = 260; // Size of the QR code
 
-        using (MemoryStream ms = new MemoryStream())
-        {
-            using (Bitmap bmp = new Bitmap(size, size))
-            {
-                using (Graphics g = Graphics.FromImage(bmp))
-                {
-                    g.Clear(System.Drawing.Color.White);
-
-                    // Center the QR code
-                    int qrCodeX = (size - qrCodeSize) / 2;
-                    int qrCodeY = (size - qrCodeSize) / 2 - 20; // Shift up slightly to make room for text
-                    Rectangle qrCodeArea = new Rectangle(qrCodeX, qrCodeY, qrCodeSize, qrCodeSize);
-
-                    // Render QR code
-                    QRCodeGenerator qrGenerator = new QRCodeGenerator();
-                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(matrix, QRCodeGenerator.ECCLevel.M);
-                    QRCode qrCode = new QRCode(qrCodeData);
-                    using (Bitmap qrCodeImage = qrCode.GetGraphic(10, System.Drawing.Color.Black, System.Drawing.Color.White, true))
-                    {
-                        g.DrawImage(qrCodeImage, qrCodeArea);
-                    }
-
-                    // Render text below QR code
-                    using (Font titleFont = new Font("Arial", 12, FontStyle.Bold))
-                    using (Font matrixFont = new Font("Arial", 10, FontStyle.Regular))
-                    {
-                        string titleText = "SeAH Steel USA";
-                        SizeF titleSize = g.MeasureString(titleText, titleFont);
-                        float titleX = (size - titleSize.Width) / 2;
-                        float titleY = qrCodeArea.Bottom ;
-
-                        g.DrawString(titleText, titleFont, Brushes.Black, titleX, titleY);
-
-                        SizeF matrixSize = g.MeasureString(matrix, matrixFont);
-                        float matrixX = (size - matrixSize.Width) / 2;
-                        float matrixY = titleY + titleSize.Height + 5;
-
-                        g.DrawString(matrix, matrixFont, Brushes.Black, matrixX, matrixY);
-                    }
-                }
-
-                bmp.Save(ms, ImageFormat.Png);
-                return "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
-            }
-        }
-    }
 
 
     private async Task ProcessValues()
@@ -324,6 +280,62 @@ else
     {
         public string QRCode { get; set; }
         public string Number { get; set; }
+    }
+    private string RenderCardAsImage(string matrix)
+    {
+        int size = 300; // Square size for the entire image
+        int qrCodeSize = 260; // Size of the QR code
+
+        using (MemoryStream ms = new MemoryStream())
+        {
+            using (Bitmap bmp = new Bitmap(size, size))
+            {
+                using (Graphics g = Graphics.FromImage(bmp))
+                {
+                    g.Clear(System.Drawing.Color.White);
+
+                    // Center the QR code
+                    int qrCodeX = (size - qrCodeSize) / 2;
+                    int qrCodeY = (size - qrCodeSize) / 2 - 20; // Shift up slightly to make room for text
+                    Rectangle qrCodeArea = new Rectangle(qrCodeX, qrCodeY, qrCodeSize, qrCodeSize);
+
+                    // Render QR code
+                    BarcodeWriter<Bitmap> barcodeWriter = new BarcodeWriter<Bitmap>
+                        {
+                            Format = BarcodeFormat.QR_CODE,
+                            Options = new QrCodeEncodingOptions
+                            {
+                                Width = qrCodeSize,
+                                Height = qrCodeSize,
+                                Margin = 0
+                            }
+                        };
+                    Bitmap qrCodeImage = barcodeWriter.Write(matrix);
+                    g.DrawImage(qrCodeImage, qrCodeArea);
+
+                    // Render text below QR code
+                    using (Font titleFont = new Font("Arial", 12, FontStyle.Bold))
+                    using (Font matrixFont = new Font("Arial", 10, FontStyle.Regular))
+                    {
+                        string titleText = "SeAH Steel USA";
+                        SizeF titleSize = g.MeasureString(titleText, titleFont);
+                        float titleX = (size - titleSize.Width) / 2;
+                        float titleY = qrCodeArea.Bottom;
+
+                        g.DrawString(titleText, titleFont, Brushes.Black, titleX, titleY);
+
+                        SizeF matrixSize = g.MeasureString(matrix, matrixFont);
+                        float matrixX = (size - matrixSize.Width) / 2;
+                        float matrixY = titleY + titleSize.Height + 5;
+
+                        g.DrawString(matrix, matrixFont, Brushes.Black, matrixX, matrixY);
+                    }
+                }
+
+                bmp.Save(ms, ImageFormat.Png);
+                return "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+            }
+        }
     }
 
 
