@@ -1,11 +1,10 @@
 ﻿@page "/TLC2"
-@using System;
-@using System.Drawing;
-@using System.Drawing.Imaging;
-@using System.IO;
+
+@using System.Runtime.InteropServices
 @using ZXing;
 @using ZXing.QrCode;
 @using ZXing.Windows.Compatibility;
+@using SkiaSharp;
 @inject ISnackbar Snackbar
 @inject BasicService BasicService
 @rendermode InteractiveServer
@@ -288,55 +287,75 @@ else
         int size = 300; // Square size for the entire image
         int qrCodeSize = 260; // Size of the QR code
 
-        using (MemoryStream ms = new MemoryStream())
+        using (var surface = SKSurface.Create(new SKImageInfo(size, size)))
         {
-            using (Bitmap bmp = new Bitmap(size, size))
-            {
-                using (Graphics g = Graphics.FromImage(bmp))
+            var canvas = surface.Canvas;
+            canvas.Clear(SKColors.White);
+
+            // Generate QR code
+            var barcodeWriter = new BarcodeWriterPixelData
                 {
-                    g.Clear(System.Drawing.Color.White);
-
-                    // Center the QR code
-                    int qrCodeX = (size - qrCodeSize) / 2;
-                    int qrCodeY = (size - qrCodeSize) / 2 - 20; // Shift up slightly to make room for text
-                    Rectangle qrCodeArea = new Rectangle(qrCodeX, qrCodeY, qrCodeSize, qrCodeSize);
-
-                    // Render QR code
-                    var barcodeWriter = new ZXing.Windows.Compatibility.BarcodeWriter
-                        {
-                            Format = BarcodeFormat.QR_CODE,
-                            Options = new QrCodeEncodingOptions
-                            {
-                                Width = qrCodeSize,
-                                Height = qrCodeSize,
-                                Margin = 0
-                            },
-                            Renderer = new BitmapRenderer() // Set the renderer here
-                        };
-                    var qrCodeImage = barcodeWriter.Write(matrix);
-                    g.DrawImage(qrCodeImage, qrCodeArea);
-
-                    // Render text below QR code
-                    using (Font titleFont = new Font("Arial", 12, FontStyle.Bold))
-                    using (Font matrixFont = new Font("Arial", 10, FontStyle.Regular))
+                    Format = BarcodeFormat.QR_CODE,
+                    Options = new QrCodeEncodingOptions
                     {
-                        string titleText = "SeAH Steel USA";
-                        SizeF titleSize = g.MeasureString(titleText, titleFont);
-                        float titleX = (size - titleSize.Width) / 2;
-                        float titleY = qrCodeArea.Bottom;
-
-                        g.DrawString(titleText, titleFont, Brushes.Black, titleX, titleY);
-
-                        SizeF matrixSize = g.MeasureString(matrix, matrixFont);
-                        float matrixX = (size - matrixSize.Width) / 2;
-                        float matrixY = titleY + titleSize.Height + 5;
-
-                        g.DrawString(matrix, matrixFont, Brushes.Black, matrixX, matrixY);
+                        Width = qrCodeSize,
+                        Height = qrCodeSize,
+                        Margin = 0
                     }
-                }
+                };
 
-                bmp.Save(ms, ImageFormat.Png);
-                return "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+            var pixelData = barcodeWriter.Write(matrix);
+
+            // Convert to SKBitmap
+            using (var qrCodeBitmap = new SKBitmap())
+            {
+                var info = new SKImageInfo(pixelData.Width, pixelData.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+
+                GCHandle pinnedArray = GCHandle.Alloc(pixelData.Pixels, GCHandleType.Pinned);
+                IntPtr pointer = pinnedArray.AddrOfPinnedObject();
+
+                // Specify the delegate explicitly to resolve ambiguity
+                SKBitmapReleaseDelegate releaseProc = (IntPtr addr, object context) =>
+                {
+                    if (context is GCHandle handle && handle.IsAllocated)
+                        handle.Free();
+                };
+
+                qrCodeBitmap.InstallPixels(info, pointer, info.RowBytes, releaseProc, pinnedArray);
+
+                // Draw QR code
+                int qrCodeX = (size - qrCodeSize) / 2;
+                int qrCodeY = (size - qrCodeSize) / 2 - 20; // Shift up slightly to make room for text
+                canvas.DrawBitmap(qrCodeBitmap, qrCodeX, qrCodeY);
+            }
+
+            // Draw text
+            using (var paint = new SKPaint())
+            {
+                paint.Color = SKColors.Black;
+                paint.IsAntialias = true;
+                paint.TextAlign = SKTextAlign.Center;
+
+                // Title
+                paint.TextSize = 12;
+                paint.Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+                string titleText = "SeAH Steel USA";
+                float titleY = (size - qrCodeSize) / 2 + qrCodeSize + 10;
+                canvas.DrawText(titleText, size / 2, titleY, paint);
+
+                // Matrix text
+                paint.TextSize = 10;
+                paint.Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+                float matrixY = titleY + 20;
+                canvas.DrawText(matrix, size / 2, matrixY, paint);
+            }
+
+            // Convert to base64
+            using (var image = surface.Snapshot())
+            using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            {
+                byte[] bytes = data.ToArray();
+                return "data:image/png;base64," + Convert.ToBase64String(bytes);
             }
         }
     }
