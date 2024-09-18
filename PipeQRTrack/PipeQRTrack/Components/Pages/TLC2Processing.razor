@@ -8,7 +8,7 @@
 @rendermode InteractiveServer
 @attribute [StreamRendering]
 @inject DataService DataService
-
+@inject IJSRuntime JSRuntime
 <PageTitle>Pipe Processing System 2</PageTitle>
 
 <button @onclick="ProcessValues">Process Values</button>
@@ -66,10 +66,16 @@
             <MudText Typo="Typo.h6" Class="mb-4">QR Code</MudText>
 
             <MudGrid Justify="Justify.Center">
-                <MudItem xs="12" sm="4" Class="d-flex justify-center">
+                <MudItem xs="12" sm="4" Class="d-flex flex-column align-center">
                     @if (GeneratedQRCodes.Any())
                     {
-                        <MudImage Src="@GeneratedQRCodes.First().QRCode" Class="mx-auto" />
+                        <MudImage  Src="@GeneratedQRCodes.First().QRCode" Class="mx-auto mb-4" />
+                        <MudButton Color="MudBlazor.Color.Primary"
+                                   Variant="Variant.Filled"
+                                   StartIcon="@Icons.Material.Filled.Print"
+                                   OnClick="PrintQRCode">
+                            Print QR Code
+                        </MudButton>
                     }
                     else
                     {
@@ -169,6 +175,15 @@ else
         if (firstRender)
         {
             await scannerInput.FocusAsync();
+        }
+    }
+
+    private async Task PrintQRCode()
+    {
+        if (GeneratedQRCodes.Any())
+        {
+            string imageUrl = GeneratedQRCodes.First().QRCode;
+            await JSRuntime.InvokeVoidAsync("printImage", imageUrl);
         }
     }
 
