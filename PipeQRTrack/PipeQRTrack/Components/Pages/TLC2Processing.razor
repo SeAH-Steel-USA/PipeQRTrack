@@ -22,6 +22,9 @@
         <MudText Typo="Typo.h5" Class="mb-4">Epicor Job Information</MudText>
 
         <MudTextField @bind-Value="scannedString"
+                      @ref="scannerInput"
+                      Immediate="true"
+                      AutoFocus="true"
                       Label="Scan Lot Number"
                       Variant="Variant.Outlined"
                       Adornment="Adornment.End"
@@ -148,6 +151,7 @@ else
 }
 
 @code {
+    private MudTextField<string> scannerInput;
     List<PipeDetailP1TLC2>? workOrderDetails = null;
     PipeDetailP1TLC2 orderDetail = new PipeDetailP1TLC2
         {
@@ -157,9 +161,17 @@ else
     {
 
 
-        workOrderDetails = await BasicService.GetAll<PipeDetailP1TLC2>();
+        workOrderDetails = (await BasicService.GetAll<PipeDetailP1TLC2>()).OrderByDescending(x => x.DateTime).ToList();
 
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await scannerInput.FocusAsync();
+        }
+    }
+
     private string RenderCardAsImage(string matrix)
     {
         int size = 300; // Square size for the entire image
@@ -251,12 +263,14 @@ else
             if (result)
             {
                 Snackbar.Add("Form submitted successfully!", Severity.Success);
-                workOrderDetails = await BasicService.GetAll<PipeDetailP1TLC2>();
+                await ProcessValues();
+                workOrderDetails = (await BasicService.GetAll<PipeDetailP1TLC2>()).OrderByDescending(x => x.DateTime).ToList();
 
                 // Clear the form by resetting orderDetail
                 orderDetail = new PipeDetailP1TLC2
                     {
                         DateTime = DateTime.Now
+
                     };
 
 
@@ -388,7 +402,10 @@ else
             if (result)
             {
                 Snackbar.Add("Record submitted successfully!", Severity.Success);
-                workOrderDetails = await BasicService.GetAll<PipeDetailP1TLC2>();
+                scannedString = null;
+                await ProcessValues();
+                await scannerInput.FocusAsync();
+                workOrderDetails = (await BasicService.GetAll<PipeDetailP1TLC2>()).OrderByDescending(x => x.DateTime).ToList();
             }
             else
             {
