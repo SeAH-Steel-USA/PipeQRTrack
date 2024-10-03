@@ -377,8 +377,8 @@ else
 
         if (dashIndex != -1)
         {
-            jointNumber = scannedString.Substring(0, dashIndex).Trim('-');
-            lotNumber = scannedString.Substring(dashIndex);
+            jointNumber = scannedString.Substring(dashIndex + 7);
+            lotNumber = scannedString.Substring(dashIndex, 7);
         }
         else
         {
@@ -440,12 +440,15 @@ else
             var newRecord = new PipeDetailP1TLC2
                 {
                     LotNumber = jobInfo.LotNumber,
+                    JointNumber = jointNumber,
                     JobNumber = jobInfo.JobNumber,
                     HeatNumber = jobInfo.HeatNumber,
                     DateTime = DateTime.Now,
                     // Add other properties as needed
                 };
 
+            
+         
             bool result = await BasicService.SubmitEntity(newRecord);
 
             if (result)
